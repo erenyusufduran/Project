@@ -39,6 +39,21 @@ const ElementController = (function () {
         getData: function () {
             return data;
         },
+        getElementById: function (id) {
+            let element = null;
+            data.elements.forEach(function (_element) {
+                if (_element.id == id) {
+                    element = _element;
+                }
+            });
+            return element;
+        },
+        setCurrentElement: function (element) {
+            data.selectedElement = element;
+        },
+        getCurrentElement: function () {
+            return data.selectedElement;
+        },
         rCalculator: function (elements) {
             elements.forEach((element) => {
                 let _r;
@@ -85,21 +100,45 @@ const ElementController = (function () {
             data.elements.push(newElement);
             return newElement;
         },
+        updateElement: function (date, pair, timeframe, shortLong, entry, tp, sl, size, wl, link, reasons, results, r, profit) {
+            let element = null;
+
+            data.elements.forEach(function (_element) {
+                if (_element.id == data.selectedElement.id) {
+                    _element.date = date;
+                    _element.pair = pair;
+                    _element.timeframe = timeframe;
+                    _element.shortLong = shortLong;
+                    _element.entry = entry;
+                    _element.tp = tp;
+                    _element.sl = sl;
+                    _element.size = size;
+                    _element.wl = wl;
+                    _element.link = link;
+                    _element.reasons = reasons;
+                    _element.results = results;
+                    _element.r = r;
+                    _element.profit = profit;
+                    element = _element;
+                }
+            });
+            return element;
+        },
         getTotalR: function () {
             let _totalR = 0;
-            data.elements.forEach(function(element) {
+            data.elements.forEach(function (element) {
                 _totalR += element.r;
             });
             data.totalR = _totalR;
             return data.totalR
         },
-        getTotalProfit: function() {
+        getTotalProfit: function () {
             let _totalProfit = 0;
-            data.elements.forEach(function(element) {
+            data.elements.forEach(function (element) {
                 _totalProfit += element.profit;
             });
             data.totalProfit = _totalProfit;
-            return data.totalProfit;
+            return data.totalProfit.toFixed(2);
         }
     }
 })();
@@ -110,6 +149,9 @@ const UIController = (function () {
     const Selectors = {
         elementList: "#item-list",
         addButton: "#addBtn",
+        updateButton: "#updateBtn",
+        cancelButton: "#cancelBtn",
+        deleteButton: "#deleteBtn",
         elementCard: "#elementCard",
         elementDate: "#date",
         elementPair: "#pair",
@@ -142,7 +184,7 @@ const UIController = (function () {
                     wL = "fas fa-times text-danger";
                 }
                 let shortLongFontAwesome;
-                if(element.shortLong.toUpperCase() == "L" || element.shortLong.toUpperCase() == "LONG") {
+                if (element.shortLong.toUpperCase() == "L" || element.shortLong.toUpperCase() == "LONG") {
                     shortLongFontAwesome = "fas fa-arrow-alt-circle-up text-success";
                 } else {
                     shortLongFontAwesome = "fas fa-arrow-alt-circle-down text-danger";
@@ -166,8 +208,8 @@ const UIController = (function () {
                         <td><a href="${element.link}" target="_blink"><i class="fas fa-link"></i></a></td>
                         <td>${element.reasons}</td>
                         <td>${element.results}</td>
-                        <td>
-                            <button type="submit" class="btn btn-warning btn-sm float-right mr-3"><i class="far fa-edit p-1"></i></button>
+                        <td class="text-right">
+                            <i class="far fa-edit editElement"></i>
                         </td>
                     </tr>
                 `;
@@ -188,7 +230,7 @@ const UIController = (function () {
                 wL = "fas fa-times text-danger";
             }
             let shortLongFontAwesome;
-            if(element.shortLong.toUpperCase() == "L" || element.shortLong.toUpperCase() == "LONG") {
+            if (element.shortLong.toUpperCase() == "L" || element.shortLong.toUpperCase() == "LONG") {
                 shortLongFontAwesome = "fas fa-arrow-alt-circle-up text-success";
             } else {
                 shortLongFontAwesome = "fas fa-arrow-alt-circle-down text-danger";
@@ -213,7 +255,7 @@ const UIController = (function () {
                     <td>${element.reasons}</td>
                     <td>${element.results}</td>
                     <td>
-                        <button type="submit" class="btn btn-warning btn-sm float-right mr-3"><i class="far fa-edit p-1"></i></button>
+                        <i class="far fa-edit editElement"></i>
                     </td>
                 </tr>
             `;
@@ -236,13 +278,46 @@ const UIController = (function () {
         hideCard: function () {
             document.querySelector(Selectors.elementCard).style.display = 'none';
         },
-        showTotal: function(totalR,totalProfit) {
+        showTotal: function (totalR, totalProfit) {
             document.querySelector(Selectors.totalR).textContent = totalR;
             document.querySelector(Selectors.totalR).textContent += "R";
 
             document.querySelector(Selectors.totalProfit).textContent = totalProfit;
             document.querySelector(Selectors.totalProfit).textContent += "$";
 
+        },
+        addElementToForm: function () {
+            const selectedElement = ElementController.getCurrentElement();
+            document.querySelector(Selectors.elementDate).value = selectedElement.date;
+            document.querySelector(Selectors.elementPair).value = selectedElement.pair;
+            document.querySelector(Selectors.elementTimeframe).value = selectedElement.timeframe;
+            document.querySelector(Selectors.elementShortLong).value = selectedElement.shortLong;
+            document.querySelector(Selectors.elementEntry).value = selectedElement.entry;
+            document.querySelector(Selectors.elementTP).value = selectedElement.tp;
+            document.querySelector(Selectors.elementSL).value = selectedElement.sl;
+            document.querySelector(Selectors.elementSize).value = selectedElement.size;
+            document.querySelector(Selectors.elementWL).value = selectedElement.wl;
+            document.querySelector(Selectors.elementLink).value = selectedElement.link;
+            document.querySelector(Selectors.elementReasons).value = selectedElement.reasons;
+            document.querySelector(Selectors.elementResults).value = selectedElement.results;
+        },
+        addingState: function () {
+            UIController.clearInputs();
+            document.querySelector(Selectors.addButton).style.display = 'inline';
+            document.querySelector(Selectors.updateButton).style.display = 'none';
+            document.querySelector(Selectors.deleteButton).style.display = 'none';
+            document.querySelector(Selectors.cancelButton).style.display = 'none';
+        },
+        editState: function (tr) {
+            const parent = tr.parentNode;
+            for (let i = 0; i < parent.children.length; i++) {
+                parent.children[i].classList.remove('bg-warning');
+            }
+            tr.classList.add('bg-warning');
+            document.querySelector(Selectors.addButton).style.display = 'none';
+            document.querySelector(Selectors.updateButton).style.display = 'inline';
+            document.querySelector(Selectors.deleteButton).style.display = 'inline';
+            document.querySelector(Selectors.cancelButton).style.display = 'inline';
         }
     }
 })();
@@ -256,6 +331,10 @@ const App = (function (ElementCtrl, UICtrl) {
     const loadEventListeners = function () {
         // add element event
         document.querySelector(UISelectors.addButton).addEventListener('click', elementAddSubmit);
+        // edit element click
+        document.querySelector(UISelectors.elementList).addEventListener('click', elementEditClick);
+        // edit element submit
+        document.querySelector(UISelectors.updateButton).addEventListener('click', editElementSubmit);
     }
     const elementAddSubmit = function (e) {
 
@@ -299,20 +378,88 @@ const App = (function (ElementCtrl, UICtrl) {
                 profit = ((elementSL - elementEntry) * elementSize - (elementEntry * elementSize / 5000) - (elementSL * elementSize / 2500)).toFixed(2);
             }
         }
-        if (elementPair !== '' && elementShortLong !== '' && elementEntry !== '' && elementTP !== '' && elementSL !== '' && elementSize !== '') {
+        if (elementPair !== '' && elementShortLong !== '' && elementEntry !== '' && elementTP !== '' && elementSL !== '' && elementSize !== '' && elementWL !== '') {
             const newElement = ElementCtrl.addElement(elementDate, elementPair, elementTimeframe, elementShortLong, elementEntry, elementTP, elementSL, elementSize, elementWL, elementLink, elementReasons, elementResults, r, profit);
             UIController.addElement(newElement);
             const totalR = ElementCtrl.getTotalR();
             const totalProfit = ElementCtrl.getTotalProfit();
-            UICtrl.showTotal(totalR,totalProfit);
+            UICtrl.showTotal(totalR, totalProfit);
             UIController.clearInputs();
+        } else {
+            alert("YOU MUST FILL THE PAIR, SHORT/LONG, ENTRY, TP, SL, SIZE, WIN/LOSE");
         }
+        e.preventDefault();
+    }
+    const elementEditClick = function (e) {
+
+        if (e.target.classList.contains('editElement')) {
+            const id = e.target.parentNode.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling
+                .previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.textContent;
+            // get selected element
+            const element = ElementCtrl.getElementById(id);
+            // set current element
+            ElementCtrl.setCurrentElement(element);
+            // add element to UI
+            UICtrl.addElementToForm();
+            UICtrl.editState(e.target.parentNode.parentNode);
+        }
+        e.preventDefault();
+    }
+    const editElementSubmit = function (e) {
+
+        const elementDate = document.querySelector(UISelectors.elementDate).value;
+        const elementPair = document.querySelector(UISelectors.elementPair).value;
+        const elementTimeframe = document.querySelector(UISelectors.elementTimeframe).value;
+        const elementShortLong = document.querySelector(UISelectors.elementShortLong).value;
+        const elementEntry = document.querySelector(UISelectors.elementEntry).value;
+        const elementTP = document.querySelector(UISelectors.elementTP).value;
+        const elementSL = document.querySelector(UISelectors.elementSL).value;
+        const elementSize = document.querySelector(UISelectors.elementSize).value;
+        const elementWL = document.querySelector(UISelectors.elementWL).value;
+        const elementLink = document.querySelector(UISelectors.elementLink).value;
+        const elementReasons = document.querySelector(UISelectors.elementReasons).value;
+        const elementResults = document.querySelector(UISelectors.elementResults).value;
+        var r;
+        if (elementShortLong.toUpperCase() == "L" || elementShortLong.toUpperCase() == 'LONG') {
+            if (elementWL.toUpperCase() == "L" || elementWL.toUpperCase() == "LOSE") {
+                r = -1;
+            } else {
+                r = ((elementTP - elementEntry) / (elementEntry - elementSL)).toFixed(2);
+            }
+        } else {
+            if (elementWL.toUpperCase() == "L" || elementWL.toUpperCase() == "LOSE") {
+                r = -1;
+            } else {
+                r = ((elementEntry - elementTP) / (elementSL - elementEntry)).toFixed(2);
+            }
+        }
+        var profit;
+        if (elementWL.toUpperCase() == "W" || elementWL.toUpperCase() == "WIN") {
+            if (elementShortLong.toUpperCase() == "L" || elementShortLong.toUpperCase() == "LONG") {
+                profit = ((elementTP - elementEntry) * elementSize - (elementEntry * elementSize / 5000) - (elementTP * elementSize / 2500)).toFixed(2);
+            } else {
+                profit = ((elementEntry - elementTP) * elementSize - (elementEntry * elementSize / 5000) - (elementTP * elementSize / 2500)).toFixed(2);
+            }
+        } else {
+            if (elementShortLong.toUpperCase() == "S" || elementShortLong.toUpperCase() == "SHORT") {
+                profit = ((elementEntry - elementSL) * elementSize - (elementEntry * elementSize / 5000) - (elementSL * elementSize / 2500)).toFixed(2);
+            } else {
+                profit = ((elementSL - elementEntry) * elementSize - (elementEntry * elementSize / 5000) - (elementSL * elementSize / 2500)).toFixed(2);
+            }
+        }
+        if (elementPair !== '' && elementShortLong !== '' && elementEntry !== '' && elementTP !== '' && elementSL !== '' && elementSize !== '' && elementWL !== '') {
+            //update element
+            const updatedElement = ElementCtrl.updateElement(elementDate, elementPair, elementTimeframe, elementShortLong, elementEntry, elementTP, elementSL, elementSize, elementWL, elementLink, elementReasons, elementResults, r, profit);
+
+        }
+
         e.preventDefault();
     }
 
     return {
         init: function () {
             console.log("Starting App..");
+            UICtrl.addingState();
             const elements = ElementCtrl.getElements();
             if (elements.length == 0) {
                 UICtrl.hideCard();
