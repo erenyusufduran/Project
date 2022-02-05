@@ -331,10 +331,15 @@ const App = (function (ElementCtrl, UICtrl) {
     const loadEventListeners = function () {
         // add element event
         document.querySelector(UISelectors.addButton).addEventListener('click', elementAddSubmit);
+<<<<<<< HEAD
         // edit element click
         document.querySelector(UISelectors.elementList).addEventListener('click', elementEditClick);
         // edit element submit
         document.querySelector(UISelectors.updateButton).addEventListener('click', editElementSubmit);
+=======
+        // edit element
+        document.querySelector(UISelectors.elementList).addEventListener('click', elementEditSubmit);
+>>>>>>> a5676b3e67cc062dd1cf25c40ccadb43d8fbfad7
     }
     const elementAddSubmit = function (e) {
 
@@ -387,6 +392,24 @@ const App = (function (ElementCtrl, UICtrl) {
             UIController.clearInputs();
         } else {
             alert("YOU MUST FILL THE PAIR, SHORT/LONG, ENTRY, TP, SL, SIZE, WIN/LOSE");
+<<<<<<< HEAD
+=======
+        }
+        e.preventDefault();
+    }
+    const elementEditSubmit = function (e) {
+
+        if (e.target.classList.contains('editElement')) {
+            const id = e.target.parentNode.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling
+                .previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.textContent;
+            // get selected element
+            const element = ElementCtrl.getElementById(id);
+            // set current element
+            ElementCtrl.setCurrentElement(element);
+            // add element to UI
+            UICtrl.addElementToForm();
+            UICtrl.editState(e.target.parentNode.parentNode);
+>>>>>>> a5676b3e67cc062dd1cf25c40ccadb43d8fbfad7
         }
         e.preventDefault();
     }
