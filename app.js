@@ -1,6 +1,49 @@
 // Storage Controller
-const storageController = (function () {
+const StorageController = (function () {
 
+
+    return {
+        storeElement: function (element) {
+            let elements;
+            if (localStorage.getItem('elements') == null) {
+                elements = [],
+                elements.push(element);
+            } else {
+                elements = JSON.parse(localStorage.getItem('elements'));
+                elements.push(element);
+            }
+            localStorage.setItem('elements',JSON.stringify(elements));
+        },
+        getElements: function() {
+            let elements;
+            if(localStorage.getItem('elements') == null) {
+                elements = [];
+            } else {
+                elements = JSON.parse(localStorage.getItem('elements'));
+            }
+            return elements;
+        },
+        updateElement: function(element) {
+            let elements = JSON.parse(localStorage.getItem('elements'));
+
+            elements.forEach(function(_element,index) {
+                if(element.id == _element.id) {
+                    elements.splice(index,1,element); 
+                }
+            });
+            localStorage.setItem('elements',JSON.stringify(elements));
+        },
+        deleteElement: function(id) {
+            let elements = JSON.parse(localStorage.getItem('elements'));
+
+            elements.forEach(function(_element,index) {
+                if(id == _element.id) {
+                    elements.splice(index,1); 
+                }
+            });
+            localStorage.setItem('elements',JSON.stringify(elements));
+        }
+    }
 })();
 
 // Element Controller
@@ -25,7 +68,7 @@ const ElementController = (function () {
         this.results = results;
     }
     var data = {
-        elements: [],
+        elements: StorageController.getElements(),
         selectedElement: null,
         totalProfit: 0,
         totalR: 0
@@ -125,8 +168,8 @@ const ElementController = (function () {
             return element;
         },
         deleteElement: function (element) {
-            data.elements.forEach(function(_element, index) {
-                if(_element.id == element.id) {
+            data.elements.forEach(function (_element, index) {
+                if (_element.id == element.id) {
                     data.elements.splice(index, 1);
                 }
             });
@@ -270,7 +313,7 @@ const UIController = (function () {
             `;
             document.querySelector(Selectors.elementList).innerHTML += item;
         },
-        updateElement: function(element) {
+        updateElement: function (element) {
             let wL;
             if (element.wl.toUpperCase() == "W" || element.wl.toUpperCase() == "WIN") {
                 wL = "fas fa-check text-success";
@@ -286,8 +329,8 @@ const UIController = (function () {
 
             let updatedItem = null;
             let items = document.querySelectorAll(Selectors.elementListItems);
-            items.forEach(function(item) {
-                if(item.classList.contains('bg-warning')) {
+            items.forEach(function (item) {
+                if (item.classList.contains('bg-warning')) {
                     item.children[1].textContent = element.date;
                     item.children[2].textContent = element.pair;
                     item.children[3].textContent = element.timeframe;
@@ -322,10 +365,10 @@ const UIController = (function () {
             document.querySelector(Selectors.elementReasons).value = '';
             document.querySelector(Selectors.elementResults).value = '';
         },
-        clearWarnings: function() {
+        clearWarnings: function () {
             const items = document.querySelectorAll(Selectors.elementListItems);
-            items.forEach(function(item) {
-                if(item.classList.contains('bg-warning')){
+            items.forEach(function (item) {
+                if (item.classList.contains('bg-warning')) {
                     item.classList.remove('bg-warning');
                 }
             });
@@ -356,10 +399,10 @@ const UIController = (function () {
             document.querySelector(Selectors.elementReasons).value = selectedElement.reasons;
             document.querySelector(Selectors.elementResults).value = selectedElement.results;
         },
-        deleteElement: function() {
+        deleteElement: function () {
             let items = document.querySelectorAll(Selectors.elementListItems);
-            items.forEach(function(item) {
-                if(item.classList.contains('bg-warning')) {
+            items.forEach(function (item) {
+                if (item.classList.contains('bg-warning')) {
                     item.remove();
                 }
             });
@@ -373,7 +416,7 @@ const UIController = (function () {
             document.querySelector(Selectors.cancelButton).style.display = 'none';
         },
         editState: function (tr) {
-            
+
             tr.classList.add('bg-warning');
             document.querySelector(Selectors.addButton).style.display = 'none';
             document.querySelector(Selectors.updateButton).style.display = 'inline';
@@ -384,7 +427,7 @@ const UIController = (function () {
 })();
 
 // App Controller
-const App = (function (ElementCtrl, UICtrl) {
+const App = (function (ElementCtrl, UICtrl, StorageCtrl) {
 
     const UISelectors = UICtrl.getSelectors();
 
@@ -447,6 +490,8 @@ const App = (function (ElementCtrl, UICtrl) {
         if (elementPair !== '' && elementShortLong !== '' && elementEntry !== '' && elementTP !== '' && elementSL !== '' && elementSize !== '' && elementWL !== '') {
             const newElement = ElementCtrl.addElement(elementDate, elementPair, elementTimeframe, elementShortLong, elementEntry, elementTP, elementSL, elementSize, elementWL, elementLink, elementReasons, elementResults, r, profit);
             UIController.addElement(newElement);
+            //add element to LS
+            StorageCtrl.storeElement(newElement);
             const totalR = ElementCtrl.getTotalR();
             const totalProfit = ElementCtrl.getTotalProfit();
             UICtrl.showTotal(totalR, totalProfit);
@@ -521,19 +566,21 @@ const App = (function (ElementCtrl, UICtrl) {
             const totalR = ElementCtrl.getTotalR();
             const totalProfit = ElementCtrl.getTotalProfit();
             UICtrl.showTotal(totalR, totalProfit);
+            // update storage
+            StorageCtrl.updateElement(updatedElement);
             UICtrl.addingState();
         }
 
         e.preventDefault();
     }
     const cancelUpdate = function (e) {
-        
+
         UICtrl.addingState();
         UICtrl.clearWarnings();
 
         e.preventDefault();
     }
-    const deleteElementSubmit = function(e) {
+    const deleteElementSubmit = function (e) {
         // get selected element
         const selectedElement = ElementCtrl.getCurrentElement();
         // delete element
@@ -543,8 +590,10 @@ const App = (function (ElementCtrl, UICtrl) {
         const totalR = ElementCtrl.getTotalR();
         const totalProfit = ElementCtrl.getTotalProfit();
         UICtrl.showTotal(totalR, totalProfit);
+        // delete from ls
+        StorageCtrl.deleteElement(selectedElement.id);
         UICtrl.addingState();
-        if(totalProfit==0) {
+        if (totalProfit == 0) {
             UICtrl.hideCard();
         }
         e.preventDefault();
@@ -561,11 +610,14 @@ const App = (function (ElementCtrl, UICtrl) {
                 UICtrl.createElementList(elements);
                 ElementCtrl.rCalculator(elements);
                 ElementCtrl.profitCalculator(elements);
+                const totalR = ElementCtrl.getTotalR();
+                const totalProfit = ElementCtrl.getTotalProfit();
+                UICtrl.showTotal(totalR, totalProfit);
             }
             loadEventListeners();
 
         }
     }
-})(ElementController, UIController)
+})(ElementController, UIController, StorageController)
 
 App.init();
