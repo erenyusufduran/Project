@@ -129,7 +129,7 @@ const ElementController = (function () {
             data.elements.forEach(function (element) {
                 _totalR += element.r;
             });
-            data.totalR = _totalR;
+            data.totalR = _totalR.toFixed(2);
             return data.totalR
         },
         getTotalProfit: function () {
@@ -137,7 +137,7 @@ const ElementController = (function () {
             data.elements.forEach(function (element) {
                 _totalProfit += element.profit;
             });
-            data.totalProfit = _totalProfit;
+            data.totalProfit = _totalProfit.toFixed(2);
 
             return data.totalProfit;
         }
@@ -315,6 +315,14 @@ const UIController = (function () {
             document.querySelector(Selectors.elementReasons).value = '';
             document.querySelector(Selectors.elementResults).value = '';
         },
+        clearWarnings: function() {
+            const items = document.querySelectorAll(Selectors.elementListItems);
+            items.forEach(function(item) {
+                if(item.classList.contains('bg-warning')){
+                    item.classList.remove('bg-warning');
+                }
+            });
+        },
         hideCard: function () {
             document.querySelector(Selectors.elementCard).style.display = 'none';
         },
@@ -341,11 +349,8 @@ const UIController = (function () {
             document.querySelector(Selectors.elementReasons).value = selectedElement.reasons;
             document.querySelector(Selectors.elementResults).value = selectedElement.results;
         },
-        addingState: function (item) {
-            if(item) {
-                item.classList.remove('bg-warning');
-            }
-
+        addingState: function () {
+            UIController.clearWarnings();
             UIController.clearInputs();
             document.querySelector(Selectors.addButton).style.display = 'inline';
             document.querySelector(Selectors.updateButton).style.display = 'none';
@@ -353,10 +358,7 @@ const UIController = (function () {
             document.querySelector(Selectors.cancelButton).style.display = 'none';
         },
         editState: function (tr) {
-            const parent = tr.parentNode;
-            for (let i = 0; i < parent.children.length; i++) {
-                parent.children[i].classList.remove('bg-warning');
-            }
+            
             tr.classList.add('bg-warning');
             document.querySelector(Selectors.addButton).style.display = 'none';
             document.querySelector(Selectors.updateButton).style.display = 'inline';
@@ -379,6 +381,8 @@ const App = (function (ElementCtrl, UICtrl) {
         document.querySelector(UISelectors.elementList).addEventListener('click', elementEditClick);
         // edit element submit
         document.querySelector(UISelectors.updateButton).addEventListener('click', editElementSubmit);
+        // cancel button click
+        document.querySelector(UISelectors.cancelButton).addEventListener('click', cancelUpdate);
     }
     const elementAddSubmit = function (e) {
 
@@ -443,6 +447,7 @@ const App = (function (ElementCtrl, UICtrl) {
             const element = ElementCtrl.getElementById(id);
             // set current element
             ElementCtrl.setCurrentElement(element);
+            UICtrl.clearWarnings();
             // add element to UI
             UICtrl.addElementToForm();
             UICtrl.editState(e.target.parentNode.parentNode);
@@ -498,8 +503,15 @@ const App = (function (ElementCtrl, UICtrl) {
             const totalR = ElementCtrl.getTotalR();
             const totalProfit = ElementCtrl.getTotalProfit();
             UICtrl.showTotal(totalR, totalProfit);
-            UICtrl.addingState(item);
+            UICtrl.addingState();
         }
+
+        e.preventDefault();
+    }
+    const cancelUpdate = function (e) {
+        
+        UICtrl.addingState();
+        UICtrl.clearWarnings();
 
         e.preventDefault();
     }
