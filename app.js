@@ -124,6 +124,13 @@ const ElementController = (function () {
             });
             return element;
         },
+        deleteElement: function (element) {
+            data.elements.forEach(function(_element, index) {
+                if(_element.id == element.id) {
+                    data.elements.splice(index, 1);
+                }
+            });
+        },
         getTotalR: function () {
             let _totalR = 0;
             data.elements.forEach(function (element) {
@@ -349,6 +356,14 @@ const UIController = (function () {
             document.querySelector(Selectors.elementReasons).value = selectedElement.reasons;
             document.querySelector(Selectors.elementResults).value = selectedElement.results;
         },
+        deleteElement: function() {
+            let items = document.querySelectorAll(Selectors.elementListItems);
+            items.forEach(function(item) {
+                if(item.classList.contains('bg-warning')) {
+                    item.remove();
+                }
+            });
+        },
         addingState: function () {
             UIController.clearWarnings();
             UIController.clearInputs();
@@ -383,6 +398,9 @@ const App = (function (ElementCtrl, UICtrl) {
         document.querySelector(UISelectors.updateButton).addEventListener('click', editElementSubmit);
         // cancel button click
         document.querySelector(UISelectors.cancelButton).addEventListener('click', cancelUpdate);
+        // delete element submit
+        document.querySelector(UISelectors.deleteButton).addEventListener('click', deleteElementSubmit);
+
     }
     const elementAddSubmit = function (e) {
 
@@ -513,6 +531,22 @@ const App = (function (ElementCtrl, UICtrl) {
         UICtrl.addingState();
         UICtrl.clearWarnings();
 
+        e.preventDefault();
+    }
+    const deleteElementSubmit = function(e) {
+        // get selected element
+        const selectedElement = ElementCtrl.getCurrentElement();
+        // delete element
+        ElementCtrl.deleteElement(selectedElement);
+        // delete ui
+        UICtrl.deleteElement();
+        const totalR = ElementCtrl.getTotalR();
+        const totalProfit = ElementCtrl.getTotalProfit();
+        UICtrl.showTotal(totalR, totalProfit);
+        UICtrl.addingState();
+        if(totalProfit==0) {
+            UICtrl.hideCard();
+        }
         e.preventDefault();
     }
 
