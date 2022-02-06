@@ -117,8 +117,8 @@ const ElementController = (function () {
                     _element.link = link;
                     _element.reasons = reasons;
                     _element.results = results;
-                    _element.r = r;
-                    _element.profit = profit;
+                    _element.r = parseFloat(r);
+                    _element.profit = parseFloat(profit);
                     element = _element;
                 }
             });
@@ -138,7 +138,8 @@ const ElementController = (function () {
                 _totalProfit += element.profit;
             });
             data.totalProfit = _totalProfit;
-            return data.totalProfit.toFixed(2);
+
+            return data.totalProfit;
         }
     }
 })();
@@ -148,6 +149,7 @@ const UIController = (function () {
 
     const Selectors = {
         elementList: "#item-list",
+        elementListItems: "#item-list tr",
         addButton: "#addBtn",
         updateButton: "#updateBtn",
         cancelButton: "#cancelBtn",
@@ -261,6 +263,44 @@ const UIController = (function () {
             `;
             document.querySelector(Selectors.elementList).innerHTML += item;
         },
+        updateElement: function(element) {
+            let wL;
+            if (element.wl.toUpperCase() == "W" || element.wl.toUpperCase() == "WIN") {
+                wL = "fas fa-check text-success";
+            } else {
+                wL = "fas fa-times text-danger";
+            }
+            let shortLongFontAwesome;
+            if (element.shortLong.toUpperCase() == "L" || element.shortLong.toUpperCase() == "LONG") {
+                shortLongFontAwesome = "fas fa-arrow-alt-circle-up text-success";
+            } else {
+                shortLongFontAwesome = "fas fa-arrow-alt-circle-down text-danger";
+            }
+
+            let updatedItem = null;
+            let items = document.querySelectorAll(Selectors.elementListItems);
+            items.forEach(function(item) {
+                if(item.classList.contains('bg-warning')) {
+                    item.children[1].textContent = element.date;
+                    item.children[2].textContent = element.pair;
+                    item.children[3].textContent = element.timeframe;
+                    item.children[4].innerHTML = `<td><a><i class="${shortLongFontAwesome}"></i></a></td>`;
+                    item.children[5].textContent = element.entry;
+                    item.children[6].textContent = element.tp;
+                    item.children[7].textContent = element.sl;
+                    item.children[8].textContent = element.size;
+                    item.children[9].textContent = element.r;
+                    item.children[10].textContent = element.profit;
+                    item.children[11].innerHTML = `<td><a href="#"<i class="${wL}"></i></a></td>`;
+                    item.children[12].innerHTML = `<td><a href="${element.link}" target="_blink"><i class="fas fa-link"></i></a></td>`;
+                    item.children[13].textContent = element.reasons;
+                    item.children[14].textContent = element.results;
+                    updatedItem = item;
+                }
+            });
+
+            return updatedItem;
+        },
         clearInputs: function () {
             document.querySelector(Selectors.elementDate).value = '';
             document.querySelector(Selectors.elementPair).value = '';
@@ -301,7 +341,11 @@ const UIController = (function () {
             document.querySelector(Selectors.elementReasons).value = selectedElement.reasons;
             document.querySelector(Selectors.elementResults).value = selectedElement.results;
         },
-        addingState: function () {
+        addingState: function (item) {
+            if(item) {
+                item.classList.remove('bg-warning');
+            }
+
             UIController.clearInputs();
             document.querySelector(Selectors.addButton).style.display = 'inline';
             document.querySelector(Selectors.updateButton).style.display = 'none';
@@ -331,15 +375,10 @@ const App = (function (ElementCtrl, UICtrl) {
     const loadEventListeners = function () {
         // add element event
         document.querySelector(UISelectors.addButton).addEventListener('click', elementAddSubmit);
-<<<<<<< HEAD
         // edit element click
         document.querySelector(UISelectors.elementList).addEventListener('click', elementEditClick);
         // edit element submit
         document.querySelector(UISelectors.updateButton).addEventListener('click', editElementSubmit);
-=======
-        // edit element
-        document.querySelector(UISelectors.elementList).addEventListener('click', elementEditSubmit);
->>>>>>> a5676b3e67cc062dd1cf25c40ccadb43d8fbfad7
     }
     const elementAddSubmit = function (e) {
 
@@ -392,24 +431,6 @@ const App = (function (ElementCtrl, UICtrl) {
             UIController.clearInputs();
         } else {
             alert("YOU MUST FILL THE PAIR, SHORT/LONG, ENTRY, TP, SL, SIZE, WIN/LOSE");
-<<<<<<< HEAD
-=======
-        }
-        e.preventDefault();
-    }
-    const elementEditSubmit = function (e) {
-
-        if (e.target.classList.contains('editElement')) {
-            const id = e.target.parentNode.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling
-                .previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.textContent;
-            // get selected element
-            const element = ElementCtrl.getElementById(id);
-            // set current element
-            ElementCtrl.setCurrentElement(element);
-            // add element to UI
-            UICtrl.addElementToForm();
-            UICtrl.editState(e.target.parentNode.parentNode);
->>>>>>> a5676b3e67cc062dd1cf25c40ccadb43d8fbfad7
         }
         e.preventDefault();
     }
@@ -473,7 +494,11 @@ const App = (function (ElementCtrl, UICtrl) {
         if (elementPair !== '' && elementShortLong !== '' && elementEntry !== '' && elementTP !== '' && elementSL !== '' && elementSize !== '' && elementWL !== '') {
             //update element
             const updatedElement = ElementCtrl.updateElement(elementDate, elementPair, elementTimeframe, elementShortLong, elementEntry, elementTP, elementSL, elementSize, elementWL, elementLink, elementReasons, elementResults, r, profit);
-
+            let item = UICtrl.updateElement(updatedElement);
+            const totalR = ElementCtrl.getTotalR();
+            const totalProfit = ElementCtrl.getTotalProfit();
+            UICtrl.showTotal(totalR, totalProfit);
+            UICtrl.addingState(item);
         }
 
         e.preventDefault();
